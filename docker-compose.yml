@@ -1,8 +1,5 @@
 version: "2.1"
 
-networks:
-  net1:
-
 services:
   redis:
     image: redis:5.0.5
