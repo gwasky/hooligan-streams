@@ -8,7 +8,7 @@ let redisClient;
   await redisClient.connect();
 })();
 
-const cacheUserStream = async (user_id, data) => {
+const cacheUserSessions = async (user_id, data) => {
   try {
     await redisClient.set(user_id, data);
     return true;
@@ -17,12 +17,39 @@ const cacheUserStream = async (user_id, data) => {
   }
 };
 
-const getActiveStreams = async (user_id) => {
+const getUserSessions = async (user_id) => {
   try {
     const sessions = await redisClient.get(user_id);
     return sessions;
   } catch (e) {
     return False;
+  }
+};
+
+const updateSessionActivity = async (
+  user_id,
+  session_id,
+  activity_timestamp
+) => {
+  try {
+    const sessions = await redisClient.get(user_id);
+    sessionsObj = JSON.parse(sessions);
+    sessionList = [];
+    for (var idx in sessionsObj) {
+      console.log(sessionsObj[idx].session_id);
+      if (sessionsObj[idx].session_id == session_id) {
+        sessionsObj[idx]["last_accessed"] = activity_timestamp;
+        sessionList.push(sessionsObj[idx]);
+      } else {
+        sessionList.push(sessionsObj[idx]);
+      }
+    }
+    console.log(sessionList);
+    await redisClient.set(user_id, JSON.stringify(sessionList));
+    return true;
+  } catch (e) {
+    console.log(e);
+    return false;
   }
 };
 
@@ -40,7 +67,16 @@ const getActiveStreams = async (user_id) => {
 //   });
 // };
 
+const getCurrentDate = () => {
+  return new Date()
+    .toISOString()
+    .replace(/[^0-9]/g, "")
+    .slice(0, -3);
+};
+
 module.exports = {
-  cacheUserStream: cacheUserStream,
-  getActiveStreams: getActiveStreams,
+  cacheUserSessions: cacheUserSessions,
+  getUserSessions: getUserSessions,
+  updateSessionActivity: updateSessionActivity,
+  getCurrentDate: getCurrentDate,
 };
