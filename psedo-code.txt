@@ -5,20 +5,22 @@
 - If a session doesnt request for the next phase of a video after X secs, It will be considered idle
 - Sessions idle for n*X secs will be expired, and active stream sessions reduced by that number
 
-
 end_point_1 (Called by a Client) - get active endpoint
     Query every X Secs
         Check # of active sessions, 
-            if <= 3:
-                return True, and trigger a Call Back (to allow stream) -> should return stream session_id and user-id
-                    if successful:
-                        Register Session in Redis:
-                            Properties being:
-                                session_id
-                                user_id
-                                last_activity_date/time
-                        
-                                # key -> [ user_id | session_id ]
+            if session_id in active-sessions:
+                update last_activity_date and return True
+            else:
+                if <= 3:                
+                    return True, and trigger a Call Back (to allow stream) -> should return stream session_id and user-id
+                        if successful:
+                            Register Session in Redis:
+                                Properties being:
+                                    session_id
+                                    user_id
+                                    last_activity_date/time
+                            
+                                    # key -> [ user_id | session_id ]
 
 end_point_2: (Triggered by a lambda function) - to Expire Inactive sessions:
     Fetch all sessions with last_activity_date_time <= n*X

@@ -1,0 +1,12 @@
+version: "2.1"
+
+networks:
+  net1:
+
+services:
+  redis:
+    image: redis:5.0.5
+    # command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server
+    ports:
+      - 6379:6379
