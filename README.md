@@ -14,33 +14,19 @@
 - If a session doesnt request for the next phase of a video after X secs, It will be considered idle
 - Sessions idle for n\*X secs will be expired, and active stream sessions reduced by that number
 
-## PSUEDO
+### NOT DONE
 
-End Point 1 | Triggered by Client
-
-1.  payload => user_id, session_id, stream_id
-    Query cache for session by user_id
-    if user has active sessions:
-    sessions < 3:
-    Is it a new session or existing session
-    if new session
-    Allow service to issue the next phase of the stream
-    if client has received the phases:
-    add the new session to cache, details stream_id, user_id, last last_activity_date
-    if existing session:
-    Allow service to issue the next phase of the stream
-    if client has received the phases:
-    Update the last_activity_timestamp for that session in cache
-    if user has no active session:
-    Allow service to issue the next phase of the stream
-    if client has received the phases:
-    add the new session to cache, details stream_id, user_id, last last_activity_date
-
-    Properties being:
-    session_id
-    user_id
-    last_activity_date/time
-
-End Point 2: (Triggered by a lambda function) - to Expire Inactive sessions:
-Fetch all sessions with last_activity_date_time <= n\*X
-expire all of them (call back)
+- Improve logging, with Log Levels, format with filename, line number
+- Implemented Integration Tests
+- ## Terraform Script
+  - Provision VPC, with 2 Subnets, 1 Public and 1 Private
+  - Create necessary roles and policies to be used by the services below eg ECS
+  - Create the Cloudwatch groups into which the ECS cluster services will write their logs
+  - Provision an ECS Cluster and place it within the Public Subnet covering multiple AZs
+  - Provision an Elastic cache (Redis) cluster and place it within the Private Subnet
+  - Provision 2 Security groups, one for the ECS Cluster and the other for the Redis cache cluster, allow ingress traffic from the ECS SG into the Redis SG
+  - Create an ECR Repository, and Codepipeline which would be used to build the NodeApp docker image and push it into the ECR repository
+  - Create a Task Definition, specifying the image pushed to the ECR repository
+  - Create an ALB, configure ALB target groups with the NodeApp port as a target port, configure listener rules for both HTTP and HTTPS
+    - Configure DNS, add an A record for this service to lb hosted Zone
+  - Configure Service discovery on the NodeApp service

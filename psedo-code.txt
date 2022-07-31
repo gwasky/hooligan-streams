@@ -1,7 +1,7 @@
 
-# PSUEDO
+## PSUEDO
 End Point 1 | Triggered by Client
-SESSIONS will send requests for new streams every X Secs
+
  1. payload => user_id, session_id, stream_id
    Query cache for session by user_id
    if user has active sessions:
