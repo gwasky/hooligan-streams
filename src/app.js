@@ -61,15 +61,35 @@ app.post("/fetch-phase", async (req, res) => {
     // }
   } else if (sessions.length < 3) {
     // Is it a new session
-    if (utils.isNewSession(body.session_id, sessions)) {
-      try {
-        console.log(`${body.user_id} - ${statusCode} -  New Session!!`);
-        body.last_accessed = utils.getCurrentTimestamp();
+
+    try {
+      const statusCode = await utils.requestStreamAccessMock();
+      console.log(`${body.user_id} - ${statusCode} -  stream success !!`);
+      body.last_accessed = utils.getCurrentTimestamp();
+      console.log(body);
+      // new stream request
+      if (utils.isNewSession(body.session_id, sessions)) {
         const status = await utils.cacheUserSessions(
           body.user_id,
           JSON.stringify(body)
         );
-      } catch (e) {}
+        if (status) {
+          res.status(200).send({ status: "success!" });
+        } else {
+          console.log("cancelling stream");
+          res.status(400).send({ status: "failed!" });
+        }
+      } else {
+        // fetching next phase of video
+      }
+    } catch (e) {
+      console.log(e);
+      console.log("stream not started successfully. Try again");
+      msg = {
+        status: "failed!",
+        reason: "stream not started successfully. Try again",
+      };
+      res.status(statusCode).send(msg);
     }
   }
   //   console.log(sessions);
