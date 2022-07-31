@@ -19,8 +19,7 @@
 - Improve logging, with Log Levels, format with filename, line number
 - Implemented Integration Tests
 - Paused job would
-
-- ## Terraform Script
+- ##### Terraform Script
   - Provision VPC, with 2 Subnets, 1 Public and 1 Private
   - Create necessary roles and policies to be used by the services below eg ECS
   - Create the Cloudwatch groups into which the ECS cluster services will write their logs
