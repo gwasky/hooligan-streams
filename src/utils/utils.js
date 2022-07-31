@@ -1,4 +1,6 @@
+const { reject, result } = require("lodash");
 const redis = require("redis");
+const request = require("request");
 
 let redisClient;
 
@@ -13,7 +15,7 @@ const cacheUserSessions = async (user_id, data) => {
     await redisClient.set(user_id, data);
     return true;
   } catch (e) {
-    return false;
+    return "error " + e;
   }
 };
 
@@ -22,7 +24,7 @@ const getUserSessions = async (user_id) => {
     const sessions = await redisClient.get(user_id);
     return sessions;
   } catch (e) {
-    return False;
+    return "error " + e;
   }
 };
 
@@ -53,30 +55,58 @@ const updateSessionActivity = async (
   }
 };
 
-// const getActiveStreams = (user_id) => {
-//   return new Promise((resolve, reject) => {
-//     redisClient
-//       .get(user_id)
-//       .then((sessions) => {
-//         // console.log(sessions);
-//         resolve(sessions);
-//       })
-//       .catch((error) => {
-//         reject(error);
-//       });
-//   });
-// };
+const isNewSession = (session_id, sessions) => {
+  const session = sessions.find((session) => session.session_id === session_id);
+  if (session) {
+    console.log(chalk.inverse(session));
+    return false;
+  } else {
+    return true;
+  }
+};
 
-const getCurrentDate = () => {
+const getCurrentTimestamp = () => {
   return new Date()
     .toISOString()
     .replace(/[^0-9]/g, "")
     .slice(0, -3);
 };
 
+const streamStatus = (uri, callback) => {
+  request(uri, (err, resp, body) => {
+    if (!err && resp.statusCode == 200) {
+      result = JSON.stringify(JSON.parse(body));
+      callback(null, result);
+    } else {
+      callback(err, null);
+    }
+  });
+};
+
+const requestStreamAccess = async (uri, payload) => {
+  console.log(uri);
+  return await new Promise((resolve, reject) => {
+    request.post(uri, payload, (err, resp) => {
+      //   console.log(payload);
+      console.log(resp.statusCode);
+      if (resp.statusCode == 200) {
+        // result = JSON.parse(payload);
+        // console.log(payload);
+        resolve(payload);
+      } else {
+        // console.log(err);
+        reject(err);
+      }
+    });
+  });
+};
+
 module.exports = {
   cacheUserSessions: cacheUserSessions,
   getUserSessions: getUserSessions,
   updateSessionActivity: updateSessionActivity,
-  getCurrentDate: getCurrentDate,
+  getCurrentTimestamp: getCurrentTimestamp,
+  isNewSession: isNewSession,
+  streamStatus: streamStatus,
+  requestStreamAccess: requestStreamAccess,
 };

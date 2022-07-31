@@ -34,7 +34,7 @@ test("Should return list of session object from redis", async () => {
 });
 
 test("Should update session object in redis", async () => {
-  const activity_timestamp = utils.getDate();
+  const activity_timestamp = utils.getCurrentTimestamp();
   const status = await utils.updateSessionActivity(
     "user_1",
     1,
@@ -43,3 +43,5 @@ test("Should update session object in redis", async () => {
   console.log(status);
   expect(status).isTruthy;
 });
+
+test("return false for users with 3 streams", async () => {});

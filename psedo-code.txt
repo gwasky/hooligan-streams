@@ -5,6 +5,8 @@
 - If a session doesnt request for the next phase of a video after X secs, It will be considered idle
 - Sessions idle for n*X secs will be expired, and active stream sessions reduced by that number
 
+- user_id = string type
+
 end_point_1 (Called by a Client) - get active endpoint
     Query every X Secs
         Check # of active sessions, 
@@ -34,3 +36,4 @@ end_point_2: (Triggered by a lambda function) - to Expire Inactive sessions:
 # WAF - Filtering Traffic
 
 
+# Fix logger
