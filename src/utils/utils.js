@@ -87,17 +87,26 @@ const requestStreamAccess = async (uri, payload) => {
   console.log(uri);
   return await new Promise((resolve, reject) => {
     request.post(uri, payload, (err, resp) => {
-      //   console.log(payload);
       console.log(resp.statusCode);
       if (resp.statusCode == 200) {
-        // result = JSON.parse(payload);
-        // console.log(payload);
         resolve(payload);
       } else {
-        // console.log(err);
         reject(err);
       }
     });
+  });
+};
+
+const requestStreamAccessMock = async () => {
+  var codes = [200, 300, 400, 500];
+  statusCode = codes[Math.floor(Math.random() * codes.length)];
+  return await new Promise((resolve, reject) => {
+    // console.log(statusCode);
+    if (statusCode == 200) {
+      resolve(statusCode);
+    } else {
+      reject(statusCode);
+    }
   });
 };
 
@@ -109,4 +118,5 @@ module.exports = {
   isNewSession: isNewSession,
   streamStatus: streamStatus,
   requestStreamAccess: requestStreamAccess,
+  requestStreamAccessMock: requestStreamAccessMock,
 };

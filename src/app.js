@@ -19,22 +19,32 @@ app.post("/fetch-phase", async (req, res) => {
   if (sessions == null) {
     // First session
     try {
-      const result = await utils.requestStreamAccess(
-        "http://" + req.headers.host + "/allow-stream-access",
-        body
-      );
-      console.log(result);
-      if (result !== null) {
-        const status = await utils.cacheUserSessions(body.user_id, body);
-        if (status) {
-          res.status(200).send({ status: "success!" });
-        }
+      //   const result = await utils.requestStreamAccess(
+      //     "http://" + req.headers.host + "/allow-stream-access",
+      //     body
+      //   );
+
+      const statusCode = await utils.requestStreamAccessMock();
+      console.log(statusCode + " Stream success !!");
+      //   if (statusCode === 200) {
+      const status = await utils.cacheUserSessions(body.user_id, body);
+      if (status) {
+        res.status(200).send({ status: "success!" });
       } else {
-        // res.status(400).send({ status: "failed!" });
-        res.send({ key: "testingsdfsdfdsfd" });
+        console.log("cancelling stream");
+        res.status(400).send({ status: "failed!" });
       }
+      //   } else {
+      //     // res.send({ key: "testingsdfsdfdsfd" });
+      //   }
     } catch (e) {
       console.log(e);
+      console.log("stream not started successfully. Try again");
+      msg = {
+        status: "failed!",
+        reason: "stream not started successfully. Try again",
+      };
+      res.status(statusCode).send(msg);
       //   res.status(400).send({ status: "failed!" });
     }
 
@@ -50,7 +60,7 @@ app.post("/fetch-phase", async (req, res) => {
     }
   }
   //   console.log(sessions);
-  res.send({ key: "testing" });
+  //   res.send({ key: "testing" });
 });
 
 app.post("/allow-stream-access", async (req, res) => {
