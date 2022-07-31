@@ -5,6 +5,8 @@
 - As a user with less than 3 sessions, i would like to request new session
 - As a user with 3 sessions, i should not be able to allow access to a third stream
 - As a user with an idle session, the idle sessions should be terminated after X time and hence allowed to another session
+- As a user currently streaming, i can use one session for more than one stream; one session = one stream
+- As a user currently streaming, i can stream a particular stream, over multiple sessions; one stream => multiple sessions
 
 ### ASSUMPTIONS
 

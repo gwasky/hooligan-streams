@@ -1,9 +1,7 @@
 const express = require("express");
 const request = require("request");
 var _ = require("lodash");
-
 const utils = require("./utils/utils.js");
-const { result } = require("lodash");
 
 var port = process.env.PORT || 8080;
 
@@ -18,11 +16,11 @@ app.post("/fetch-phase", async (req, res) => {
     "stream_id",
     "last_accessed",
   ]);
-  //   console.log(body);
   // Get Number of Active sessions
-  const sessions = await utils.getUserSessions(body.user_id);
+  var sessions = await utils.getUserSessions(body.user_id);
+  console.log(`${body.user_id} - sessions  -  ${sessions}`);
   if (sessions == null) {
-    // First session
+    // First Session
     try {
       //   const result = await utils.requestStreamAccess(
       //     "http://" + req.headers.host + "/allow-stream-access",
@@ -30,12 +28,12 @@ app.post("/fetch-phase", async (req, res) => {
       //   );
 
       const statusCode = await utils.requestStreamAccessMock();
-      console.log(`${body.user_id} - ${statusCode} -  stream success !!`);
+      console.log(`${body.user_id} - ${statusCode} -  first session !!`);
       body.last_accessed = utils.getCurrentTimestamp();
-      console.log(body);
+      //   console.log(body);
       const status = await utils.cacheUserSessions(
         body.user_id,
-        JSON.stringify(body)
+        JSON.stringify([body])
       );
       if (status) {
         res.status(200).send({ status: "success!" });
@@ -51,36 +49,88 @@ app.post("/fetch-phase", async (req, res) => {
         reason: "stream not started successfully. Try again",
       };
       res.status(statusCode).send(msg);
-      //   res.status(400).send({ status: "failed!" });
     }
-
-    // console.log(result);
-    // const status = await utils.cacheUserSessions(body.user_id, body);
-    // if (status) {
-    //   res.status(200).send({});
-    // }
-  } else if (sessions.length < 3) {
-    // Is it a new session
-
+  } else if (JSON.parse(sessions).length < 3) {
+    sessions = JSON.parse(sessions);
+    console.log(`${body.user_id} - session count [${sessions.length}] `);
     try {
       const statusCode = await utils.requestStreamAccessMock();
       console.log(`${body.user_id} - ${statusCode} -  stream success !!`);
       body.last_accessed = utils.getCurrentTimestamp();
-      console.log(body);
-      // new stream request
-      if (utils.isNewSession(body.session_id, sessions)) {
+      //   console.log(body);
+      if (
+        utils.isNewSession(body.session_id, sessions) ||
+        utils.isNewStream(body.stream_id, sessions)
+      ) {
+        if (utils.isNewSession(body.session_id, sessions))
+          console.log(`${body.user_id} - new session`);
+        if (utils.isNewStream(body.session_id, sessions))
+          console.log(`${body.user_id} - new stream`);
+        if (
+          utils.isNewSession(body.session_id, sessions) &&
+          utils.isNewStream(body.session_id, sessions)
+        )
+          console.log(`${body.user_id} - new stream && new session`);
+        var sessionList = sessions;
+        sessionList.push(body);
+        // console.log(sessionList);
         const status = await utils.cacheUserSessions(
           body.user_id,
-          JSON.stringify(body)
+          JSON.stringify(sessionList)
         );
         if (status) {
           res.status(200).send({ status: "success!" });
         } else {
-          console.log("cancelling stream");
+          console.log(`${body.user_id} - cancelling stream`);
           res.status(400).send({ status: "failed!" });
         }
-      } else {
+      }
+      //   // new stream request
+      //   if (utils.isNewSession(body.session_id, sessions)) {
+      //     console.log(`${body.user_id} - new session`);
+      //     const status = await utils.cacheUserSessions(
+      //       body.user_id,
+      //       JSON.stringify([body])
+      //     );
+      //     if (status) {
+      //       res.status(200).send({ status: "success!" });
+      //     } else {
+      //       console.log(`${body.user_id} - cancelling stream`);
+      //       res.status(400).send({ status: "failed!" });
+      //     }
+      //   } else if (utils.isNewStream(body.stream_id, sessions)) {
+      //     console.log(`${body.user_id} - new stream`);
+      //     var sessionList = sessions;
+      //     sessionList.push(body);
+      //     console.log(sessionList);
+      //     const status = await utils.cacheUserSessions(
+      //       body.user_id,
+      //       JSON.stringify(sessionList)
+      //     );
+      //     if (status) {
+      //       res.status(200).send({ status: "success!" });
+      //     } else {
+      //       console.log(`${body.user_id} - cancelling stream`);
+      //       res.status(400).send({ status: "failed!" });
+      //     }
+      //   }
+      else {
         // fetching next phase of video
+        console.log(
+          `${body.user_id} - fetching next phase of stream - ${body.stream_id} - will update activity date`
+        );
+        const status = await utils.updateSessionActivity(
+          body.user_id,
+          body.session_id,
+          body.stream_id,
+          body.last_accessed
+        );
+        if (status) {
+          res.status(200).send({ status: "success!" });
+        } else {
+          console.log(`${body.user_id} - cancelling stream`);
+          res.status(400).send({ status: "failed!" });
+        }
       }
     } catch (e) {
       console.log(e);
@@ -91,9 +141,11 @@ app.post("/fetch-phase", async (req, res) => {
       };
       res.status(statusCode).send(msg);
     }
+  } else {
+    res
+      .status(403)
+      .send({ status: "Forbidden!", reason: "Already have 3 active streams" });
   }
-  //   console.log(sessions);
-  //   res.send({ key: "testing" });
 });
 
 app.post("/allow-stream-access", async (req, res) => {

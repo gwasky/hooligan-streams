@@ -1,6 +1,7 @@
 const { reject, result } = require("lodash");
 const redis = require("redis");
 const request = require("request");
+const chalk = require("chalk");
 
 let redisClient;
 
@@ -32,6 +33,7 @@ const getUserSessions = async (user_id) => {
 const updateSessionActivity = async (
   user_id,
   session_id,
+  stream_id,
   activity_timestamp
 ) => {
   try {
@@ -40,14 +42,17 @@ const updateSessionActivity = async (
     sessionList = [];
     for (var idx in sessionsObj) {
       console.log(sessionsObj[idx].session_id);
-      if (sessionsObj[idx].session_id == session_id) {
+      if (
+        sessionsObj[idx].session_id == session_id &&
+        sessionsObj[idx].stream_id == stream_id
+      ) {
         sessionsObj[idx]["last_accessed"] = activity_timestamp;
         sessionList.push(sessionsObj[idx]);
       } else {
         sessionList.push(sessionsObj[idx]);
       }
     }
-    console.log(sessionList);
+    // console.log(sessionList);
     await redisClient.set(user_id, JSON.stringify(sessionList));
     return true;
   } catch (e) {
@@ -58,6 +63,16 @@ const updateSessionActivity = async (
 
 const isNewSession = (session_id, sessions) => {
   const session = sessions.find((session) => session.session_id === session_id);
+  if (session) {
+    console.log(chalk.inverse(session));
+    return false;
+  } else {
+    return true;
+  }
+};
+
+const isNewStream = (stream_id, sessions) => {
+  const session = sessions.find((session) => session.stream_id === stream_id);
   if (session) {
     console.log(chalk.inverse(session));
     return false;
@@ -118,6 +133,7 @@ module.exports = {
   updateSessionActivity: updateSessionActivity,
   getCurrentTimestamp: getCurrentTimestamp,
   isNewSession: isNewSession,
+  isNewStream: isNewStream,
   streamStatus: streamStatus,
   requestStreamAccess: requestStreamAccess,
   requestStreamAccessMock: requestStreamAccessMock,
