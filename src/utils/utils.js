@@ -12,6 +12,7 @@ let redisClient;
 
 const cacheUserSessions = async (user_id, data) => {
   try {
+    console.log(`Caching ${user_id} - ${data}`);
     await redisClient.set(user_id, data);
     return true;
   } catch (e) {
@@ -98,7 +99,8 @@ const requestStreamAccess = async (uri, payload) => {
 };
 
 const requestStreamAccessMock = async () => {
-  var codes = [200, 300, 400, 500];
+  //   var codes = [200, 300, 400, 500];
+  var codes = [200];
   statusCode = codes[Math.floor(Math.random() * codes.length)];
   return await new Promise((resolve, reject) => {
     // console.log(statusCode);
