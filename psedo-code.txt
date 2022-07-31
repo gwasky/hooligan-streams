@@ -1,27 +1,33 @@
 
 # PSUEDO
-end_point_1 (Called by a Client) - get active endpoint
-    Query every X Secs
-        Check # of active sessions, 
-            if session_id in active-sessions:
-                update last_activity_date and return True
-            else:
-                if <= 3:                
-                    return True, and trigger a Call Back (to allow stream) -> should return stream session_id and user-id
-                        if successful:
-                            Register Session in Redis:
-                                Properties being:
-                                    session_id
-                                    user_id
-                                    last_activity_date/time
-                            
-                                    # key -> [ user_id | session_id ]
+End Point 1 | Triggered by Client
+SESSIONS will send requests for new streams every X Secs
+ 1. payload => user_id, session_id, stream_id
+   Query cache for session by user_id
+   if user has active sessions:
+     sessions < 3:
+       Is it a new session or existing session
+        if new session
+            Allow service to issue the next phase of the stream
+            if client has received the phases:
+              add the new session to cache, details stream_id, user_id, last last_activity_date
+        if existing session:
+            Allow service to issue the next phase of the stream
+            if client has received the phases:
+              Update the last_activity_timestamp for that session in cache
+    if user has no active session:
+            Allow service to issue the next phase of the stream
+            if client has received the phases:
+              add the new session to cache, details stream_id, user_id, last last_activity_date
 
-end_point_2: (Triggered by a lambda function) - to Expire Inactive sessions:
+    Properties being:
+        session_id
+        user_id
+        last_activity_date/time
+
+End Point 2: (Triggered by a lambda function) - to Expire Inactive sessions:
     Fetch all sessions with last_activity_date_time <= n*X
         expire all of them (call back)
-
-
 
 # ASG with ECS
 # ACM for certificate Management

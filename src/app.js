@@ -1,10 +1,9 @@
 const express = require("express");
-const request = require("request");
 var _ = require("lodash");
 const utils = require("./utils/utils.js");
 const MAX_STREAMS = 3;
 
-var port = process.env.PORT || 8080;
+var port = process.env.APP_PORT || 8080;
 
 const app = express();
 

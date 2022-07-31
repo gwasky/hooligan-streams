@@ -7,3 +7,13 @@ services:
     command: redis-server
     ports:
       - 6379:6379
+
+  streams:
+    build: .
+    command: redis-server
+    ports:
+      - 8080:3000
+    environment:
+      - APP_PORT=3000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
