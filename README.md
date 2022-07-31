@@ -14,11 +14,17 @@
 - If a session doesnt request for the next phase of a video after X secs, It will be considered idle
 - Sessions idle for n\*X secs will be expired, and active stream sessions reduced by that number
 
+## HOW TO RUN
+
+    docker-compose up -d
+
+    curl -X POST http://<host:port>/stream -H 'Content-Type: application/json' -d '{"user_id":"user_1","stream_id":"EPL_1","session_id": 1}'
+
 ### NOT DONE
 
 - Improve logging, with Log Levels, format with filename, line number
 - Implemented Integration Tests
-- Paused job would
+- Function that would be deployde as a Lambda function, that would periodically ran in order to expire all sessions in cache that have been idle for a set period of time, ie sessions not sending new requests for new parts of a stream, by way of setting the TTL in redis to 0
 - ##### Terraform Script
   - Provision VPC, with 2 Subnets, 1 Public and 1 Private
   - Create necessary roles and policies to be used by the services below eg ECS
