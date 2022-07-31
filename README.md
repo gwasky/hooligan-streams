@@ -18,6 +18,8 @@
 
 - Improve logging, with Log Levels, format with filename, line number
 - Implemented Integration Tests
+- Paused job would
+
 - ## Terraform Script
   - Provision VPC, with 2 Subnets, 1 Public and 1 Private
   - Create necessary roles and policies to be used by the services below eg ECS
@@ -29,4 +31,7 @@
   - Create a Task Definition, specifying the image pushed to the ECR repository
   - Create an ALB, configure ALB target groups with the NodeApp port as a target port, configure listener rules for both HTTP and HTTPS
     - Configure DNS, add an A record for this service to lb hosted Zone
-  - Configure Service discovery on the NodeApp service
+    - Configure Service discovery on the NodeApp service
+  - Things to consider:
+    - Auto Scaling groups to scalability
+    - Web Application Firewall, log to Cloudwatch
