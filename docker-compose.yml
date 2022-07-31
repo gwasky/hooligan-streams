@@ -10,9 +10,8 @@ services:
 
   streams:
     build: .
-    command: redis-server
     ports:
-      - 8080:3000
+      - 3000:3000
     environment:
       - APP_PORT=3000
       - REDIS_HOST=redis

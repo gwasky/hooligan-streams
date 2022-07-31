@@ -4,6 +4,8 @@ const utils = require("./utils/utils.js");
 const MAX_STREAMS = 3;
 
 var port = process.env.APP_PORT || 8080;
+var redis_host = process.env.REDIS_HOST || "localhost";
+var redis_port = process.env.REDIS_PORT || 6379;
 
 const app = express();
 
@@ -115,4 +117,5 @@ app.post("/allow-stream-access", async (req, res) => {
 
 app.listen(port, () => {
   console.log(`Started on port ${port}`);
+  console.log(`Connections to redis on ${redis_host}:${redis_port}`);
 });

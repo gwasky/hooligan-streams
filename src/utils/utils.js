@@ -10,9 +10,9 @@ var redis_host = process.env.REDIS_HOST || "localhost";
 var redis_port = process.env.REDIS_PORT || 6379;
 
 (async () => {
+  const url = `redis://${redis_host}:${redis_port}`;
   redisClient = redis.createClient({
-    host: redis_host,
-    port: redis_port,
+    url,
   });
   redisClient.on("error", (error) => console.error(`Error : ${error}`));
   await redisClient.connect();
@@ -22,11 +22,17 @@ const cacheUserSessions = async (user_id, data) => {
   try {
     console.log(`Caching ${user_id} - ${data}`);
     const sessions = await redisClient.get(user_id);
-    if (JSON.parse(sessions).length < MAX_STREAMS) {
+    if (sessions) {
+      if (JSON.parse(sessions).length < MAX_STREAMS) {
+        await redisClient.set(user_id, data);
+        return true;
+      } else {
+        console.log(`${user_id} -  Max [${MAX_STREAMS}] Streams !!`);
+        return false;
+      }
+    } else {
       await redisClient.set(user_id, data);
       return true;
-    } else {
-      return false;
     }
   } catch (e) {
     return false;
