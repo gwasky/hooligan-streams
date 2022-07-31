@@ -2,6 +2,7 @@ const express = require("express");
 const request = require("request");
 var _ = require("lodash");
 const utils = require("./utils/utils.js");
+const MAX_STREAMS = 3;
 
 var port = process.env.PORT || 8080;
 
@@ -9,7 +10,7 @@ const app = express();
 
 app.use(express.json());
 
-app.post("/fetch-phase", async (req, res) => {
+app.post("/stream", async (req, res) => {
   var body = _.pick(req.body, [
     "user_id",
     "session_id",
@@ -50,27 +51,15 @@ app.post("/fetch-phase", async (req, res) => {
       };
       res.status(statusCode).send(msg);
     }
-  } else if (JSON.parse(sessions).length < 3) {
+  } else if (JSON.parse(sessions).length < MAX_STREAMS) {
     sessions = JSON.parse(sessions);
     console.log(`${body.user_id} - session count [${sessions.length}] `);
     try {
       const statusCode = await utils.requestStreamAccessMock();
       console.log(`${body.user_id} - ${statusCode} -  stream success !!`);
       body.last_accessed = utils.getCurrentTimestamp();
-      //   console.log(body);
-      if (
-        utils.isNewSession(body.session_id, sessions) ||
-        utils.isNewStream(body.stream_id, sessions)
-      ) {
-        if (utils.isNewSession(body.session_id, sessions))
-          console.log(`${body.user_id} - new session`);
-        if (utils.isNewStream(body.session_id, sessions))
-          console.log(`${body.user_id} - new stream`);
-        if (
-          utils.isNewSession(body.session_id, sessions) &&
-          utils.isNewStream(body.session_id, sessions)
-        )
-          console.log(`${body.user_id} - new stream && new session`);
+      if (utils.isNewSession(body.session_id, sessions)) {
+        console.log(`${body.user_id} - new session`);
         var sessionList = sessions;
         sessionList.push(body);
         // console.log(sessionList);
@@ -84,37 +73,7 @@ app.post("/fetch-phase", async (req, res) => {
           console.log(`${body.user_id} - cancelling stream`);
           res.status(400).send({ status: "failed!" });
         }
-      }
-      //   // new stream request
-      //   if (utils.isNewSession(body.session_id, sessions)) {
-      //     console.log(`${body.user_id} - new session`);
-      //     const status = await utils.cacheUserSessions(
-      //       body.user_id,
-      //       JSON.stringify([body])
-      //     );
-      //     if (status) {
-      //       res.status(200).send({ status: "success!" });
-      //     } else {
-      //       console.log(`${body.user_id} - cancelling stream`);
-      //       res.status(400).send({ status: "failed!" });
-      //     }
-      //   } else if (utils.isNewStream(body.stream_id, sessions)) {
-      //     console.log(`${body.user_id} - new stream`);
-      //     var sessionList = sessions;
-      //     sessionList.push(body);
-      //     console.log(sessionList);
-      //     const status = await utils.cacheUserSessions(
-      //       body.user_id,
-      //       JSON.stringify(sessionList)
-      //     );
-      //     if (status) {
-      //       res.status(200).send({ status: "success!" });
-      //     } else {
-      //       console.log(`${body.user_id} - cancelling stream`);
-      //       res.status(400).send({ status: "failed!" });
-      //     }
-      //   }
-      else {
+      } else {
         // fetching next phase of video
         console.log(
           `${body.user_id} - fetching next phase of stream - ${body.stream_id} - will update activity date`
@@ -133,8 +92,7 @@ app.post("/fetch-phase", async (req, res) => {
         }
       }
     } catch (e) {
-      console.log(e);
-      console.log("stream not started successfully. Try again");
+      console.log("stream not started successfully. Try again " + e);
       msg = {
         status: "failed!",
         reason: "stream not started successfully. Try again",

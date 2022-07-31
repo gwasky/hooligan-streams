@@ -4,6 +4,7 @@ const request = require("request");
 const chalk = require("chalk");
 
 let redisClient;
+let MAX_STREAMS = 3;
 
 (async () => {
   redisClient = redis.createClient();
@@ -14,10 +15,15 @@ let redisClient;
 const cacheUserSessions = async (user_id, data) => {
   try {
     console.log(`Caching ${user_id} - ${data}`);
-    await redisClient.set(user_id, data);
-    return true;
+    const sessions = await redisClient.get(user_id);
+    if (JSON.parse(sessions).length < 3) {
+      await redisClient.set(user_id, data);
+      return true;
+    } else {
+      return false;
+    }
   } catch (e) {
-    return "error " + e;
+    return false;
   }
 };
 
@@ -41,7 +47,6 @@ const updateSessionActivity = async (
     sessionsObj = JSON.parse(sessions);
     sessionList = [];
     for (var idx in sessionsObj) {
-      console.log(sessionsObj[idx].session_id);
       if (
         sessionsObj[idx].session_id == session_id &&
         sessionsObj[idx].stream_id == stream_id
@@ -56,15 +61,30 @@ const updateSessionActivity = async (
     await redisClient.set(user_id, JSON.stringify(sessionList));
     return true;
   } catch (e) {
-    console.log(e);
+    // console.log(e);
     return false;
+  }
+};
+
+const isNewSessionAndStream = (session_id, stream_id, sessions) => {
+  const session = sessions.find(
+    (session) =>
+      session.session_id === session_id && session.stream_id == stream_id
+  );
+  if (session) {
+    console.log(
+      `${session.user_id} - session_id[${session.session_id}] with stream[${session.stream_id}] exists - `
+    );
+    return false;
+  } else {
+    return true;
   }
 };
 
 const isNewSession = (session_id, sessions) => {
   const session = sessions.find((session) => session.session_id === session_id);
   if (session) {
-    console.log(chalk.inverse(session));
+    console.log(`${session.user_id} - session_id exists - `);
     return false;
   } else {
     return true;
@@ -74,7 +94,7 @@ const isNewSession = (session_id, sessions) => {
 const isNewStream = (stream_id, sessions) => {
   const session = sessions.find((session) => session.stream_id === stream_id);
   if (session) {
-    console.log(chalk.inverse(session));
+    console.log(chalk.inverse(JSON.stringify(session)));
     return false;
   } else {
     return true;
@@ -137,4 +157,5 @@ module.exports = {
   streamStatus: streamStatus,
   requestStreamAccess: requestStreamAccess,
   requestStreamAccessMock: requestStreamAccessMock,
+  isNewSessionAndStream: isNewSessionAndStream,
 };
